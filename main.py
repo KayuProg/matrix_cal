@@ -218,10 +218,33 @@ class print_ans(tk.Frame):
                 # 行列要素位置指定
                 mat_text.place(x=elem_x, y=elem_y)
 
+    def print_ans_koyuti(self,koyuti):
+        self.pri_koyuti=koyuti
+        self.pri_ans_koyu = tk.Label(self, text='固有値: ' + self.pri_koyuti)
+        self.pri_ans_koyu.pack(side='bottom')
+        self.pack_propagate(0)#オブジェクトサイズ指定
+
 
 ##########################################################
 # 行列計算のボタン
 ##########################################################
+#listで帰ってくる固有値を表示するための文字列にする関数
+def list_to_pri(koyuti_list):
+    result=[]
+    for i in range(len(koyuti_list)):
+        value=str(koyuti_list[i])
+        result.append(f'{i+1}個目')
+        result.append(value)
+        result.append(' ')
+    result=' '.join(result)
+    return result
+
+def koyuti_ease(koyuti):
+    result=koyuti
+    result=result.replace('**','^')
+    result=result.replace('*','')
+    result=result.replace('sqrt','√')
+    return result
 
 class calcButton(tk.Frame):
     def __init__(self, root, mat):
@@ -358,12 +381,8 @@ class calcButton(tk.Frame):
         # このm_matで計算可能
         m_mat = self.mat
         m_mat.get_elem()
-        # 余因子行列だから行と列の数は逆
+        # 余因子行列だから行と列の数は同じ
         ans = m_mat.mat.adjugate()
-        #eigenvalsは辞書式配列で帰ってくるからsortedでキー名(固有値)のみ取得する
-        ans_zisyo=m_mat.mat.eigenvals()
-        self.ans_koyuti=sorted(ans_zisyo)#sorted()はlistで返す
-        #対角行列なので行・列は同じ
         row = m_mat.row
         col = m_mat.col
         print('Adjugate mat is ', ans)
@@ -413,20 +432,37 @@ class calcButton(tk.Frame):
         #diagonolize()では(P,D)で帰ってくるPDP**(-1)
         #だからans[1]を渡す
         ans=ans[1]
-        row = m_mat.col
-        col = m_mat.row
-        print('Transposed ', ans)
+        row = m_mat.row
+        col = m_mat.col
+        # eigenvalsは辞書式配列で帰ってくるからsortedでキー名(固有値)のみ取得する
+        ans_zisyo = m_mat.mat.eigenvals()
+        ans_koyuti = sorted(ans_zisyo)  # sorted()はlistで返す
+        # 固有値のlistを表示するための文字列に直す
+        koyuti_char = list_to_pri(ans_koyuti)
+        #固有値の文字列を簡単にする
+        self.pri_koyuti=koyuti_ease(koyuti_char)
+
+        print('Diagonalized is ', ans)
+        print('Koyuti is ',self.pri_koyuti)
         # 表示するためのクラスを作成
         # ただし，すでに表示しているものがあれば一度destroy()する
         if self.pri_flag == 0:
             self.print_answer = print_ans(self.root, m_mat)
             self.print_answer.print_ans_mat(ans, row, col)
+            # 固有値をprint_ansowerウィジェットの下部に配置する
+            self.print_answer.print_ans_koyuti(self.pri_koyuti)
+
             self.pri_flag = 1
         elif self.pri_flag == 1:
             self.print_answer.destroy()
             self.print_answer = print_ans(self.root, m_mat)
             self.print_answer.print_ans_mat(ans, row, col)
+            # 固有値をprint_ansowerウィジェットの下部に配置する
+            self.print_answer.print_ans_koyuti(self.pri_koyuti)
 
+#TODO 固有値が重複したときの重複数も表示したい
+#TODO すぐ見切れてしまう，謎にできる間がいらない
+#TODO 見切れている場合は　見切れている場合のボタンを設置して新しくウィンドウを開くのもいいかも
     #正則行列
     def calc_sei(self):
         # matrix classのmat → m_mat
