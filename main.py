@@ -158,18 +158,42 @@ class matrix(tk.Frame):
 
 # 行列内の最大文字列数を確認する関数
 def mat_cha_check(mat, row_, col_):
-    val = 0
-    for row in range(row_):
-        for col in range(col_):
-            cha = mat[row, col]
-            cha = str(cha)
-            cha = list(cha)
-            if val < len(cha):
-                val = len(cha)
+    val = []
+    for col in range(col_):
+        max = 0
+        #列ごとに最大文字数？を計算
+        for row in range(row_):
+            mat_value=mat[row,col]
+            mat_val_str=str(mat_value)
+            mat_val_list=list(mat_val_str)
+            mat_val_len=len(mat_val_list)
+            if max < mat_val_len:
+                max=mat_val_len
+        #列ごとの最大文字数をvalに格納
+        val.append(max)
     # print('val is',val)
     return val
 
+def mat_cha_check_for_list(mat, row_, col_):
+    val = []
+    for col in range(col_):
+        max = 0
+        #列ごとに最大文字数？を計算
+        for row in range(row_):
+            mat_value=mat[row][col]
+            mat_val_str=str(mat_value)
+            mat_val_list=list(mat_val_str)
+            mat_val_len=len(mat_val_list)
+            # print(row,col,'は',mat_val_len,'が文字数')
+            if max < mat_val_len:
+                max=mat_val_len
+        #列ごとの最大文字数をvalに格納
+        val.append(max)
+        # print(f'{col}列目の最大文字数は',max)
+    # print('val is',val)
+    return val
 
+#行列内の要素を見やすくする
 def mat_elem_ease(mat, row_, col_):
     return_mat = []
     for row in range(row_):
@@ -195,8 +219,18 @@ class print_ans(tk.Frame):
         ans_mat = self.c_mat.mat
         ans_row = self.c_mat.row
         ans_col = self.c_mat.col
-        num = mat_cha_check(ans_mat, ans_row, ans_col)
-        ans_wid = ans_col * (num + 100) + 300
+        #行列の答えを表示する幅，高さを決める
+        #mat_cha_checkで列ごとの最大文字数のlistがかえてっくる
+        max_col_cha= mat_cha_check(ans_mat, ans_row, ans_col)#list
+        max_col_cha_sum=sum(max_col_cha)
+        #列ごとの最大文字数の幅を考慮した行列表示幅の計算
+        ans_wid=0
+        for i in range(len(max_col_cha)):
+            pri_mat_col_length=max_col_cha[i]
+            ans_wid=ans_wid+pri_mat_col_length+200
+        #表示する行列と左側の壁との距離を足す
+        ans_wid=ans_wid+300
+        # ans_wid = ans_col * (max_col_cha + 100) + 300
         ans_hei = ans_row * (30 + 10) + 300
 
         super().__init__(root, width=ans_wid, height=ans_hei, borderwidth=4, relief='groove')
@@ -204,19 +238,34 @@ class print_ans(tk.Frame):
 
     # 行列の表示
     def print_ans_mat(self, ans, row_, col_):
-        mat_elem_wid = mat_cha_check(ans, row_, col_) * 10
         # 行列の要素を簡単にする
         ans = mat_elem_ease(ans, row_, col_)
-
-        for row in range(row_):
-            for col in range(col_):
-                mat_text = tk.Message(self, font=("", 15), width=mat_elem_wid,
+        print('表示したい答えは',ans)
+        #実際に行列を配置する
+        #列ごとに並べることにする．各列の最大文字数によって行列の列の幅を調整するため
+        mat_col_cha_len_list= mat_cha_check_for_list(ans, row_, col_)
+        col_position=0
+        for col in range(row_):
+            #列の最大文字列を格納
+            #文字の位置は前の列の最後の位置を参照しなくてはいけない．一つ前の列の文字の最後の位置を計算して次の列の位置を計算する
+            pri_col_cha_length=mat_col_cha_len_list[col]*20#フォントのサイズが15ptなので一つの文字の幅は20pxとなる． 文字数×文字の横幅
+            print(f'{col}列目の表示したい最大文字数は is',mat_col_cha_len_list[col])
+            print('表示したい横幅は',pri_col_cha_length)
+            #TODO　文字数が増えると文字が圧縮されていく
+            #todo 長すぎて表示されないときはそのまま答えを表示するボタンを作る
+            #todo 逆行列を計算するボタンがありませんよー
+            for row in range(col_):
+                mat_text = tk.Message(self, font=("", 15), width=pri_col_cha_length,
                                       text=f'{ans[row][col]}', bg='lightblue')
                 # 行列要素位置
-                elem_x = col * (mat_elem_wid + 30)
-                elem_y = row * (30 + 10)
+                elem_x = col_position
+                print('表示位置は',elem_x)
+                elem_y = row * (30 + 10)#文字の高さ分+行の間の隙間
                 # 行列要素位置指定
                 mat_text.place(x=elem_x, y=elem_y)
+            #col_positionに表示した列の位置を足していく
+            col_position=col_position+pri_col_cha_length+20#50は列同士の間隔
+
 
     def print_ans_koyuti(self,koyuti):
         self.pri_koyuti=koyuti
@@ -460,7 +509,6 @@ class calcButton(tk.Frame):
             # 固有値をprint_ansowerウィジェットの下部に配置する
             self.print_answer.print_ans_koyuti(self.pri_koyuti)
 
-#TODO 固有値が重複したときの重複数も表示したい
 #TODO すぐ見切れてしまう，謎にできる間がいらない
 #TODO 見切れている場合は　見切れている場合のボタンを設置して新しくウィンドウを開くのもいいかも
     #正則行列
