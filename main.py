@@ -171,7 +171,11 @@ def mat_cha_check(mat, row_, col_):
                 max=mat_val_len
         #列ごとの最大文字数をvalに格納
         val.append(max)
-    # print('val is',val)
+
+
+    # print('val is', val)
+
+
     return val
 
 def mat_cha_check_for_list(mat, row_, col_):
@@ -182,15 +186,18 @@ def mat_cha_check_for_list(mat, row_, col_):
         for row in range(row_):
             mat_value=mat[row][col]
             mat_val_str=str(mat_value)
+            # print('文字は',mat_val_str)
             mat_val_list=list(mat_val_str)
             mat_val_len=len(mat_val_list)
+            # print('長さは',mat_val_len)
             # print(row,col,'は',mat_val_len,'が文字数')
             if max < mat_val_len:
                 max=mat_val_len
+        # print('max is',max)
         #列ごとの最大文字数をvalに格納
         val.append(max)
         # print(f'{col}列目の最大文字数は',max)
-    # print('val is',val)
+
     return val
 
 #行列内の要素を見やすくする
@@ -222,49 +229,47 @@ class print_ans(tk.Frame):
         #行列の答えを表示する幅，高さを決める
         #mat_cha_checkで列ごとの最大文字数のlistがかえてっくる
         max_col_cha= mat_cha_check(ans_mat, ans_row, ans_col)#list
-        max_col_cha_sum=sum(max_col_cha)
+        # print('列ごとの最大文字数のlistは',max_col_cha)
         #列ごとの最大文字数の幅を考慮した行列表示幅の計算
         ans_wid=0
         for i in range(len(max_col_cha)):
-            pri_mat_col_length=max_col_cha[i]
-            ans_wid=ans_wid+pri_mat_col_length+200
-        #表示する行列と左側の壁との距離を足す
-        ans_wid=ans_wid+300
-        # ans_wid = ans_col * (max_col_cha + 100) + 300
+            length=max_col_cha[i]
+            ans_wid=ans_wid+length*20#列ごとの最大文字数分の幅を加算
+        ans_wid=ans_wid+len(max_col_cha)*40+(len(max_col_cha)+1)*15#行列要素の横幅20+20=40・行列要素の間隔(列数+1)*10
         ans_hei = ans_row * (30 + 10) + 300
-
-        super().__init__(root, width=ans_wid, height=ans_hei, borderwidth=4, relief='groove')
+        super().__init__(root, width=ans_wid+550, height=ans_hei, borderwidth=4, relief='groove')
         self.pack(side='right', anchor=tk.NW)
 
     # 行列の表示
     def print_ans_mat(self, ans, row_, col_):
         # 行列の要素を簡単にする
         ans = mat_elem_ease(ans, row_, col_)
-        print('表示したい答えは',ans)
+        # print('表示したい答えは',ans)
         #実際に行列を配置する
         #列ごとに並べることにする．各列の最大文字数によって行列の列の幅を調整するため
         mat_col_cha_len_list= mat_cha_check_for_list(ans, row_, col_)
         col_position=0
-        for col in range(row_):
+        for col in range(col_):
             #列の最大文字列を格納
             #文字の位置は前の列の最後の位置を参照しなくてはいけない．一つ前の列の文字の最後の位置を計算して次の列の位置を計算する
-            pri_col_cha_length=mat_col_cha_len_list[col]*20#フォントのサイズが15ptなので一つの文字の幅は20pxとなる． 文字数×文字の横幅
-            print(f'{col}列目の表示したい最大文字数は is',mat_col_cha_len_list[col])
-            print('表示したい横幅は',pri_col_cha_length)
-            #TODO　文字数が増えると文字が圧縮されていく
-            #todo 長すぎて表示されないときはそのまま答えを表示するボタンを作る
-            #todo 逆行列を計算するボタンがありませんよー
-            for row in range(col_):
+            pri_col_cha_length=mat_col_cha_len_list[col]*15# 文字数×文字の横幅
+            # print(f'{col}列目の表示したい最大文字数は is',mat_col_cha_len_list[col])
+            # print('表示したい横幅は',pri_col_cha_length)
+
+            for row in range(row_):
                 mat_text = tk.Message(self, font=("", 15), width=pri_col_cha_length,
                                       text=f'{ans[row][col]}', bg='lightblue')
                 # 行列要素位置
                 elem_x = col_position
-                print('表示位置は',elem_x)
+                # print('表示位置は',elem_x)
                 elem_y = row * (30 + 10)#文字の高さ分+行の間の隙間
                 # 行列要素位置指定
                 mat_text.place(x=elem_x, y=elem_y)
             #col_positionに表示した列の位置を足していく
             col_position=col_position+pri_col_cha_length+20#50は列同士の間隔
+
+
+
 
 
     def print_ans_koyuti(self,koyuti):
@@ -300,6 +305,7 @@ class calcButton(tk.Frame):
         # matはmatrix class
         self.mat = mat
         self.root = root
+        self.mat_ans=[]
         super().__init__(root, width=1200, height=70, borderwidth=4, relief='groove')
         self.pack(side='bottom')
         self.pack_propagate(0)
@@ -311,21 +317,21 @@ class calcButton(tk.Frame):
     def create_widgets(self):
         # 転置計算
         self.cal_trans = tk.Button(self, text='転置', font=("", 15),
-                                   width=10, height=50, command=self.calc_transpose)
-        self.cal_trans.pack(side='left', padx=10, pady=10)
+                                   width=8, height=50, command=self.calc_transpose)
+        self.cal_trans.pack(side='left', padx=5, pady=10)
 
         #定数倍
         self.cal_cons_entry = tk.Entry(self, width=8)
         self.cal_cons_entry.pack(side='left')
         self.cal_cons = tk.Button(self, text='倍を計算', font=("", 15),
-                                   width=10, height=50, command=self.calc_cons)
+                                   width=8, height=50, command=self.calc_cons)
         self.cal_cons.pack(side='left', padx=5, pady=10)
 
         # 累乗
         self.cal_power_entry = tk.Entry(self,width=8)
         self.cal_power_entry.pack(side='left')
         self.cal_power = tk.Button(self, text='乗を計算', font=("", 15),
-                                   width=10, height=50, command=self.calc_power)
+                                   width=8, height=50, command=self.calc_power)
         self.cal_power.pack(side='left', padx=5, pady=10)
 
         #余因子行列
@@ -333,21 +339,29 @@ class calcButton(tk.Frame):
                                  width=10, height=50, command=self.calc_adj)
         self.cal_adj.pack(side='left', padx=10, pady=10)
 
+        #行列式
+        self.cal_det = tk.Button(self, text='行列式', font=("", 15),
+                                   width=8, height=50, command=self.calc_det)
+        self.cal_det.pack(side='left', padx=5, pady=10)
+
         #逆行列
         self.cal_inv = tk.Button(self, text='逆行列', font=("", 15),
-                                   width=10, height=50, command=self.calc_inv)
+                                   width=8, height=50, command=self.calc_inv)
         self.cal_inv.pack(side='left', padx=10, pady=10)
 
         #対角化
         self.cal_dia = tk.Button(self, text='対角化', font=("", 15),
-                                 width=10, height=50, command=self.calc_dia)
+                                 width=8, height=50, command=self.calc_dia)
         self.cal_dia.pack(side='left', padx=10, pady=10)
 
         #正則行列
         self.cal_sei = tk.Button(self, text='正則行列', font=("", 15),
-                                 width=10, height=50, command=self.calc_sei)
+                                 width=8, height=50, command=self.calc_sei)
         self.cal_sei.pack(side='left', padx=10, pady=10)
 
+        #行列がうまく表示されないときのボタン
+        self.re_print = tk.Button(self.root, text='別ウィンドウで答えを表示', font=("", 15), command=self.re_print_mat)
+        self.re_print.pack(side='bottom', padx=10, pady=10,anchor=tk.SE)
 
 
     # 転置
@@ -358,9 +372,10 @@ class calcButton(tk.Frame):
         m_mat.get_elem()
         # 転置だから行と列の数は逆
         ans = m_mat.mat.transpose()
+        self.mat_ans=ans
         row = m_mat.col
         col = m_mat.row
-        print('Transposed ',ans)
+        # print('Transposed ',ans)
         # 表示するためのクラスを作成
         # ただし，すでに表示しているものがあれば一度destroy()する
         if self.pri_flag == 0:
@@ -387,9 +402,10 @@ class calcButton(tk.Frame):
             cons=num
         # 定数倍だから行と列の数はそのまま
         ans = m_mat.mat*cons
+        self.mat_ans=ans
         row = m_mat.row
         col = m_mat.col
-        print(f'{cons} * mat is', ans)
+        # print(f'{cons} * mat is', ans)
         # 表示するためのクラスを作成
         # ただし，すでに表示しているものがあれば一度destroy()する
         if self.pri_flag == 0:
@@ -410,9 +426,10 @@ class calcButton(tk.Frame):
         power=self.cal_power_entry.get()
         # 累乗だから行と列の数はそのまま
         ans = m_mat.mat**power
+        self.mat_ans=ans
         row = m_mat.row
         col = m_mat.col
-        print(f'power of {power} is', ans)
+        # print(f'power of {power} is', ans)
         # 表示するためのクラスを作成
         # ただし，すでに表示しているものがあれば一度destroy()する
         if self.pri_flag == 0:
@@ -432,9 +449,10 @@ class calcButton(tk.Frame):
         m_mat.get_elem()
         # 余因子行列だから行と列の数は同じ
         ans = m_mat.mat.adjugate()
+        self.mat_ans=ans
         row = m_mat.row
         col = m_mat.col
-        print('Adjugate mat is ', ans)
+        # print('Adjugate mat is ', ans)
         # 表示するためのクラスを作成
         # ただし，すでに表示しているものがあれば一度destroy()する
         if self.pri_flag == 0:
@@ -446,6 +464,29 @@ class calcButton(tk.Frame):
             self.print_answer = print_ans(self.root, m_mat)
             self.print_answer.print_ans_mat(ans, row, col)
 
+    #行列式
+    def calc_det(self):
+        # matrix classのmat → m_mat
+        # このm_matで計算可能
+        m_mat = self.mat
+        m_mat.get_elem()
+        # 余因子行列だから行と列の数は同じ
+        ans = m_mat.mat.det()
+        row = m_mat.row
+        col = m_mat.col
+        # print('Det of mat is ', ans)
+        # 表示するためのクラスを作成
+        # ただし，すでに表示しているものがあれば一度destroy()する
+        if self.pri_flag == 0:
+            self.print_answer = print_ans(self.root, m_mat)
+            self.print_answer.print_ans_mat(ans, row, col)
+            self.pri_flag = 1
+        elif self.pri_flag == 1:
+            self.print_answer.destroy()
+            self.print_answer = print_ans(self.root, m_mat)
+            self.print_answer.print_ans_mat(ans, row, col)
+
+
     #逆行列
     def calc_inv(self):
         # matrix classのmat → m_mat
@@ -456,9 +497,10 @@ class calcButton(tk.Frame):
         if m_mat.mat.det()==0:
             messagebox.showerror('Calculation Error', '行列式が0のため計算できません．')
         ans = m_mat.mat.inv()
+        self.mat_ans=ans
         row = m_mat.row
         col = m_mat.col
-        print('Inversed is ', ans)
+        # print('Inversed is ', ans)
         # 表示するためのクラスを作成
         # ただし，すでに表示しているものがあれば一度destroy()する
         if self.pri_flag == 0:
@@ -481,6 +523,7 @@ class calcButton(tk.Frame):
         #diagonolize()では(P,D)で帰ってくるPDP**(-1)
         #だからans[1]を渡す
         ans=ans[1]
+        self.mat_ans=ans
         row = m_mat.row
         col = m_mat.col
         # eigenvalsは辞書式配列で帰ってくるからsortedでキー名(固有値)のみ取得する
@@ -491,8 +534,8 @@ class calcButton(tk.Frame):
         #固有値の文字列を簡単にする
         self.pri_koyuti=koyuti_ease(koyuti_char)
 
-        print('Diagonalized is ', ans)
-        print('Koyuti is ',self.pri_koyuti)
+        # print('Diagonalized is ', ans)
+        # print('Koyuti is ',self.pri_koyuti)
         # 表示するためのクラスを作成
         # ただし，すでに表示しているものがあれば一度destroy()する
         if self.pri_flag == 0:
@@ -509,8 +552,6 @@ class calcButton(tk.Frame):
             # 固有値をprint_ansowerウィジェットの下部に配置する
             self.print_answer.print_ans_koyuti(self.pri_koyuti)
 
-#TODO すぐ見切れてしまう，謎にできる間がいらない
-#TODO 見切れている場合は　見切れている場合のボタンを設置して新しくウィンドウを開くのもいいかも
     #正則行列
     def calc_sei(self):
         # matrix classのmat → m_mat
@@ -522,9 +563,10 @@ class calcButton(tk.Frame):
         # diagonolize()では(P,D)で帰ってくるPDP**(-1)
         # だからans[1]を渡す
         ans = ans[0]
+        self.mat_ans=ans
         row = m_mat.col
         col = m_mat.row
-        print('Transposed ', ans)
+        # print('Transposed ', ans)
         # 表示するためのクラスを作成
         # ただし，すでに表示しているものがあれば一度destroy()する
         if self.pri_flag == 0:
@@ -535,6 +577,54 @@ class calcButton(tk.Frame):
             self.print_answer.destroy()
             self.print_answer = print_ans(self.root, m_mat)
             self.print_answer.print_ans_mat(ans, row, col)
+
+    #行列がうまく表示されないときの関数
+    def re_print_mat(self):
+        # matrix classのmat → m_mat
+        # このm_matで計算可能
+        ans = self.mat_ans
+        # 行数，列数を取得
+        row_ = ans.shape[0]
+        col_ = ans.shape[1]
+
+        # print('re_print ans is', ans)
+        #新しいウィンドウで表示する処理
+        re_print_window = tk.Tk()
+        re_print_window.title("Reprinted Window")
+
+        #reprint_matにpymatrixからlistとしてansを格納
+        reprint_mat=ans.tolist()
+        # for row in range(row_):
+        #     re_print_row=tk.Label(re_print_window,text=reprint_mat[row],font=("", 15))
+        #     re_print_row.pack(side='top', padx=5, pady=5)
+
+        for row in range(row_):
+            reprint_row=reprint(re_print_window,reprint_mat[row])
+        # print('reprint_mat is',reprint_mat)
+        re_print_window.pack_propagate(0)  # オブジェクトサイズ指定
+        re_print_window.mainloop()
+
+#行列の再表示するときのクラス
+class reprint(tk.Frame):
+    def __init__(self, root, row):
+        # matはmatrix class
+        self.row=row
+        super().__init__(root)
+        self.pack(side='top')
+        self.pack_propagate(0)
+
+        for row_len in range(len(self.row)):
+            print(0)
+            row_val=tk.Label(self,text=self.row[row_len],font=("",15))
+            row_val.pack(side='left',padx=5)
+
+
+
+
+
+##########################################################
+#   注意書き
+##########################################################
 
 main = matrix(main_win)
 buttons = calcButton(main_win, main)
