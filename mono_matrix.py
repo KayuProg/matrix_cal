@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import tkinter.ttk as ttk
 import sympy
 import re
 
@@ -9,6 +10,14 @@ main_win.geometry('1200x600')
 
 # img set
 # 後で参照するための画像保持
+if getattr(sys, 'frozen', False):
+    # 実行ファイルからの実行時
+    script_dir = sys._MEIPASS
+else:
+    # スクリプトからの実行時
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(script_dir, "sample.csv")
+
 img_up = tk.PhotoImage(file='./img/up.png')
 img_down = tk.PhotoImage(file='./img/down.png')
 img_right = tk.PhotoImage(file='./img/right.png')
@@ -317,6 +326,8 @@ class calcButton(tk.Frame):
         self.pack_propagate(0)
         self.create_widgets()
 
+        #行列式の再表示に使う
+        self.det=None
         # すでに表示されているものがあるのかの判定
         self.pri_flag = 0
 
@@ -477,6 +488,7 @@ class calcButton(tk.Frame):
         m_mat = self.mat
         m_mat.get_elem()
         ans=m_mat.mat.det()
+        self.det=ans
         #簡単にする
         ans=str(ans)
         ans=char_ease(ans)
@@ -503,6 +515,8 @@ class calcButton(tk.Frame):
         m_mat = self.mat
         m_mat.get_elem()
         # 逆行列だから行と列の数は同じ
+        if m_mat.mat.shape[0]!=m_mat.mat.shape[1]:
+            messagebox.showerror('Calculation Error', '正方行列でないため計算できません．')
         if m_mat.mat.det()==0:
             messagebox.showerror('Calculation Error', '行列式が0のため計算できません．')
         ans = m_mat.mat.inv()
@@ -606,9 +620,7 @@ class calcButton(tk.Frame):
         #reprint_matにpymatrixからlistとしてansを格納
         reprint_mat=ans.tolist()
         #reprint_matを簡単にする
-        print('re',reprint_mat)
         reprint_mat=remat_elem_ease(reprint_mat)
-        print(reprint_mat)
         # for row in range(row_):
         #     re_print_row=tk.Label(re_print_window,text=reprint_mat[row],font=("", 15))
         #     re_print_row.pack(side='top', padx=5, pady=5)
@@ -650,14 +662,34 @@ def remat_elem_ease(mat):
 
     return return_remat
 
-
-
-
 ##########################################################
 #   注意書き
 ##########################################################
+class caution(tk.Frame):
+    def __init__(self, root):
+        # matはmatrix class
+        super().__init__(root)
+        self.pack(side='bottom',anchor=tk.SW)
+        text1 = tk.Label(self, text="!!CAUTION!!", font=("Helvetica", 15), background='yellow')
+        text1.pack(side='top', padx=5,anchor=tk.NW)
+        text2 = tk.Label(self, text="・行列を拡大した際に表示が他と被った場合にはウィンドウのサイズを調整してください．", font=("", 12))
+        text2.pack(side='top', padx=5,anchor=tk.NW)
+        text2 = tk.Label(self, text="・文字を含んだ計算をする際には演算記号(+,-,*,/,^)を忘れずつけてください．", font=("", 12))
+        text2.pack(side='top', padx=5, anchor=tk.NW)
+        text3 = tk.Label(self, text="・回答となる行列がうまく表示されないときは右の「別ウィンドで答えを表示」を使ってください．", font=("", 12))
+        text3.pack(side='top', padx=5,anchor=tk.NW)
+        text4 = tk.Label(self, text="・下の演算ボタンを押しても変化がない場合はエラーです．", font=("", 12))
+        text4.pack(side='top', padx=5,anchor=tk.NW)
+
+
+
 
 main = matrix(main_win)
 buttons = calcButton(main_win, main)
+cautions=caution(main_win)
 
 main.mainloop()
+
+
+
+
